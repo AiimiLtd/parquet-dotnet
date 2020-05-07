@@ -21,7 +21,7 @@ namespace Parquet
             writer.CompressionMethod = CompressionMethod.None;
             using (ParquetRowGroupWriter rgw = writer.CreateRowGroup())
             {
-               foreach(DataColumn column in columns)
+               foreach (DataColumn column in columns)
                {
                   rgw.WriteColumn(column);
                }
@@ -46,7 +46,7 @@ namespace Parquet
                DataField[] dataFields = schema.GetDataFields();
                columns = new DataColumn[dataFields.Length];
 
-               for(int i = 0; i < dataFields.Length; i++)
+               for (int i = 0; i < dataFields.Length; i++)
                {
                   columns[i] = rgr.ReadColumn(dataFields[i]);
                }
@@ -76,7 +76,7 @@ namespace Parquet
       {
          Table result = null;
 
-         for(int i = 0; i < reader.RowGroupCount; i++)
+         for (int i = 0; i < reader.RowGroupCount; i++)
          {
             using (ParquetRowGroupReader rowGroupReader = reader.OpenRowGroupReader(i))
             {
@@ -84,17 +84,47 @@ namespace Parquet
 
                var t = new Table(reader.Schema, allData, rowGroupReader.RowCount);
 
-               if(result == null)
+               if (result == null)
                {
                   result = t;
                }
                else
                {
-                  foreach(Row row in t)
+                  foreach (Row row in t)
                   {
                      result.Add(row);
                   }
                }
+            }
+         }
+
+         return result;
+      }
+
+      /// <summary>
+      /// Reads an open row group as a Table
+      /// </summary>
+      /// <param name="rowGroupReader">Open row group reader</param>
+      /// <param name="schema">File schema</param>
+      /// <param name="rowCount">Number of rows to include, if NULL all rows will be included</param>
+      /// <returns></returns>
+      public static Table ReadAsTable(this ParquetRowGroupReader rowGroupReader, Schema schema, int? rowCount)
+      {
+         Table result = null;
+
+         DataColumn[] allData = schema.GetDataFields().Select(df => rowGroupReader.ReadColumn(df)).ToArray();
+
+         var t = new Table(schema, allData, rowCount ?? rowGroupReader.RowCount);
+
+         if (result == null)
+         {
+            result = t;
+         }
+         else
+         {
+            foreach (Row row in t)
+            {
+               result.Add(row);
             }
          }
 

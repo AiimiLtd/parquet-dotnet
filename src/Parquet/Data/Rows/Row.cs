@@ -215,7 +215,7 @@ namespace Parquet.Data.Rows
 
          StringFormat sf = GetStringFormat(format);
 
-         if (sf == StringFormat.Csv && rowIndex == 0)
+         if ((sf == StringFormat.Csv || sf == StringFormat.Tsv) && rowIndex == 0)
          {
             //print headers
             int i = 0;
@@ -238,6 +238,7 @@ namespace Parquet.Data.Rows
          {
             "j" => StringFormat.Json,
             "c" => StringFormat.Csv,
+            "t" => StringFormat.Tsv,
             _ => StringFormat.JsonSingleQuote
          };
       }

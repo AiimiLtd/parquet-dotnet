@@ -4,6 +4,7 @@
    {
       JsonSingleQuote,
       Json,
-      Csv
+      Csv,
+      Tsv
    }
 }

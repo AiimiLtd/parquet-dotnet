@@ -39,6 +39,9 @@ namespace Parquet.Extensions
                case StringFormat.Csv:
                   sb.Append(",");
                   break;
+               case StringFormat.Tsv:
+                  sb.Append("\t");
+                  break;
                case StringFormat.Json:
                   sb.Append(",");
                   break;
@@ -92,7 +95,7 @@ namespace Parquet.Extensions
 
       public static void AppendNull(this StringBuilder sb, StringFormat sf)
       {
-         if (sf != StringFormat.Csv)
+         if (sf != StringFormat.Csv && sf != StringFormat.Tsv)
          {
             sb.Append("null");
          }
@@ -108,9 +111,20 @@ namespace Parquet.Extensions
          {
             EncodeCsv(sb, sf, value);
          }
+         else if (sf == StringFormat.Tsv)
+         {
+            EncodeTsv(sb, sf, value);
+         }
       }
 
       private static void EncodeCsv(StringBuilder sb, StringFormat sf, object value)
+      {
+         if (value == null) return;
+
+         sb.Append(value.ToString());
+      }
+
+      private static void EncodeTsv(StringBuilder sb, StringFormat sf, object value)
       {
          if (value == null) return;
 

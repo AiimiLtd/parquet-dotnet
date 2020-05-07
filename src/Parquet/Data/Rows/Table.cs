@@ -47,7 +47,7 @@ namespace Parquet.Data.Rows
          Schema = schema ?? throw new ArgumentNullException(nameof(schema));
          _dfs = schema.Fields.ToArray();
 
-         if(tableData != null)
+         if (tableData != null)
          {
             var converter = new DataColumnsToRowsConverter(schema, tableData, rowCount);
             _rows.AddRange(converter.Convert());
@@ -232,7 +232,7 @@ namespace Parquet.Data.Rows
 
          if (!other.Schema.Equals(Schema))
          {
-            if(throwExceptions)
+            if (throwExceptions)
                throw new ArgumentException(Schema.GetNotEqualsMessage(other.Schema, "this", "other"));
 
             return false;
@@ -246,7 +246,7 @@ namespace Parquet.Data.Rows
             return false;
          }
 
-         for(int i = 0; i < Count; i++)
+         for (int i = 0; i < Count; i++)
          {
             if (!this[i].Equals(other[i]))
             {
@@ -295,13 +295,10 @@ namespace Parquet.Data.Rows
       /// Converts to string with optional formatting.  Only shows the first 10 rows as table may be large.
       /// </summary>
       /// <param name="format">jsq - one line single-quote json, default, j - one line json</param>
+      /// <param name="maxRows"></param>
+      /// <param name="includeHeader"></param>
       /// <returns></returns>
-      public string ToString(string format)
-      {
-         return ToString(format, 10);
-      }
-
-      private string ToString(string format, int maxRows)
+      public string ToString(string format, int maxRows = 10, bool includeHeader = false)
       {
          StringFormat sf = Row.GetStringFormat(format);
 
@@ -315,6 +312,12 @@ namespace Parquet.Data.Rows
          {
             if (first)
             {
+               if (includeHeader && (sf == StringFormat.Csv || sf == StringFormat.Tsv))
+               {
+                  string x = (sf == StringFormat.Tsv ? "\t" : ",");
+                  sb.Append(string.Join(x, Schema.GetDataFields().Select(field => field.Name)));
+                  sb.DivideObjects(sf, 0);
+               }
                first = false;
             }
             else
@@ -326,12 +329,13 @@ namespace Parquet.Data.Rows
             {
                row.ToString(sb, sf, 1, Schema.Fields);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                throw new InvalidOperationException($"failed to convert row #{i}", ex);
             }
 
             i++;
+            if (i > maxRows) break;
          }
 
          sb.EndArray(sf, 0);
