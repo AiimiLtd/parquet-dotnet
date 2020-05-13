@@ -293,16 +293,16 @@ namespace Parquet.Data.Rows
          {
             sb.AppendNull(sf);
          }
-         else if(f != null)
+         else if (f != null)
          {
             switch (f.SchemaType)
             {
                case SchemaType.Data:
                   DataField df = (DataField)f;
-                  if(df.IsArray)
+                  if (df.IsArray)
                   {
                      sb.StartArray(sf, level);
-                     foreach(object vb in (IEnumerable)v)
+                     foreach (object vb in (IEnumerable)v)
                      {
                         if (first)
                            first = false;
@@ -317,7 +317,35 @@ namespace Parquet.Data.Rows
                   }
                   else
                   {
-                     sb.Append(sf, v);
+                     if (v is DateTimeOffset dateValue)
+                     {
+                        sb.Append(sf, dateValue.ToString("o"));
+                     }
+                     else if (v is byte[] bytesValue)
+                     {
+                        // Hack: try and convert small byte arrays to a string when printing - fixes some older output
+                        if (bytesValue.Length > 64)
+                        {
+                           sb.Append(sf, "<binary>");
+                        }
+                        else
+                        {
+                           try
+                           {
+                              string byteValue = Encoding.UTF8.GetString(bytesValue);
+                              sb.Append(sf, byteValue);
+                           }
+                           catch
+                           {
+                              sb.Append(sf, "<binary>");
+                           }
+                        }
+                     }
+                     else
+                     {
+                        // Rely on ToString()
+                        sb.Append(sf, v);
+                     }
                   }
                   break;
 
@@ -336,7 +364,7 @@ namespace Parquet.Data.Rows
                case SchemaType.Map:
                   MapField mf = (MapField)f;
                   sb.StartArray(sf, level);
-                  foreach(Row row in (IEnumerable)v)
+                  foreach (Row row in (IEnumerable)v)
                   {
                      if (first)
                         first = false;
@@ -351,7 +379,7 @@ namespace Parquet.Data.Rows
                case SchemaType.List:
                   ListField lf = (ListField)f;
                   sb.StartArray(sf, level);
-                  foreach(object le in (IEnumerable)v)
+                  foreach (object le in (IEnumerable)v)
                   {
                      if (first)
                         first = false;
@@ -410,7 +438,7 @@ namespace Parquet.Data.Rows
       {
          if (Values.Length != other.Values.Length)
          {
-            if(throwException)
+            if (throwException)
             {
                throw new ArgumentException($"values count is different ({Values.Length} != {other.Values.Length})");
             }
@@ -418,12 +446,12 @@ namespace Parquet.Data.Rows
             return false;
          }
 
-         for(int i = 0; i < Values.Length; i++)
+         for (int i = 0; i < Values.Length; i++)
          {
             object v = Values[i];
             object ov = other.Values[i];
 
-            if(!Equal(v, ov, i, throwException))
+            if (!Equal(v, ov, i, throwException))
             {
                return false;
             }

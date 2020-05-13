@@ -99,6 +99,10 @@ namespace Parquet.Extensions
          {
             sb.Append("null");
          }
+         else
+         {
+            sb.Append("<null>");
+         }
       }
 
       public static void Append(this StringBuilder sb, StringFormat sf, object value)
